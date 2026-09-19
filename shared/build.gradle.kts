@@ -59,6 +59,17 @@ kotlin {
         }
     }
 
+    iosArm64()
+    iosSimulatorArm64()
+
+    targets
+        .withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget>()
+        .configureEach {
+            binaries.framework {
+                baseName = "shared"
+            }
+        }
+
     sourceSets {
         androidMain.dependencies {
             implementation(libs.ktor.okhttp)
@@ -69,6 +80,9 @@ kotlin {
             implementation(libs.androidx.camera.lifecycle)
             implementation(libs.androidx.camera.view)
             implementation(libs.zxing.core)
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.darwin)
         }
         commonMain.dependencies {
             @Suppress("DEPRECATION")
