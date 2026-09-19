@@ -1,4 +1,10 @@
 package com.github.ilife798
 
-// 骨架占位：Task 4（tasks 2.1）替换为 UIPasteboard 真实现。
-actual fun copyTextToClipboard(text: String): Boolean = false
+import platform.UIKit.UIPasteboard
+
+// iOS 剪贴板：UIPasteboard；写入失败/非字符串环境返回 false。
+actual fun copyTextToClipboard(text: String): Boolean =
+    runCatching {
+        UIPasteboard.generalPasteboard.string = text
+        true
+    }.getOrDefault(false)

@@ -1,41 +1,57 @@
 package com.github.ilife798
 
-// 骨架占位：Task 4（tasks 2.1）替换为 NSUserDefaults 真实现。
+import platform.Foundation.NSUserDefaults
+
+// iOS 持久化：系统键值存储（标准 suite）。key 统一加前缀防与其它存储碰撞；
+// 首次读取缺失返回 null/默认值；值域为 String/Boolean/Int 封装。
 actual class PersistentStorage {
-    private val memory = mutableMapOf<String, Any>()
+    private val defaults = NSUserDefaults.standardUserDefaults
 
     actual fun saveString(
         key: String,
         value: String,
     ) {
-        memory[key] = value
+        defaults.setObject(value, forKey = "$KEY_PREFIX$key")
     }
 
-    actual fun getString(key: String): String? = memory[key] as? String
+    actual fun getString(key: String): String? = defaults.stringForKey("$KEY_PREFIX$key")
 
     actual fun saveBoolean(
         key: String,
         value: Boolean,
     ) {
-        memory[key] = value
+        defaults.setBool(value, forKey = "$KEY_PREFIX$key")
     }
 
-    actual fun getBoolean(key: String): Boolean = memory[key] as? Boolean ?: false
+    actual fun getBoolean(key: String): Boolean = defaults.boolForKey("$KEY_PREFIX$key")
 
     actual fun getBoolean(
         key: String,
         defaultValue: Boolean,
-    ): Boolean = memory[key] as? Boolean ?: defaultValue
+    ): Boolean =
+        if (defaults.objectForKey("$KEY_PREFIX$key") == null) {
+            defaultValue
+        } else {
+            defaults.boolForKey("$KEY_PREFIX$key")
+        }
 
     actual fun saveInt(
         key: String,
         value: Int,
     ) {
-        memory[key] = value
+        defaults.setInteger(value.toLong(), forKey = "$KEY_PREFIX$key")
     }
 
     actual fun getInt(
         key: String,
         defaultValue: Int,
-    ): Int = memory[key] as? Int ?: defaultValue
+    ): Int {
+        // 本类只经 saveInt 写入；经字符串读取回避 NSNumber 绑定的 API 差异。
+        val raw = defaults.stringForKey("$KEY_PREFIX$key") ?: return defaultValue
+        return raw.toIntOrNull() ?: defaultValue
+    }
+
+    private companion object {
+        const val KEY_PREFIX = "ilife798."
+    }
 }

@@ -1,6 +1,8 @@
 package com.github.ilife798
 
-// 骨架占位：Task 5（tasks 2.2）替换为 NSBundle 真实现。
-actual fun getAppVersion(): String = "0"
+import platform.Foundation.NSBundle
 
-actual fun getAppVersionCode(): String = "0"
+// 版本号来自 App 包信息；缺失返回 "0"。
+actual fun getAppVersion(): String = NSBundle.mainBundle.infoDictionary?.get("CFBundleShortVersionString") as? String ?: "0"
+
+actual fun getAppVersionCode(): String = NSBundle.mainBundle.infoDictionary?.get("CFBundleVersion") as? String ?: "0"
