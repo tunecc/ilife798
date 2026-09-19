@@ -6,6 +6,8 @@ base-ref: f56e965
 
 <!-- comet-task-authority: docs/openspec/changes/ios-platform-features/tasks.md -->
 
+<!-- comet-task-authority: docs/openspec/changes/ios-platform-features/tasks.md -->
+
 # iOS 平台功能替代实现（ios-platform-features）实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -86,6 +88,7 @@ docs/openspec/changes/ios-platform-features/
 ---
 
 ### Task 1: 共享层 AppUpdatePlatform expect 扩展与双平台 actual【tasks 4.1 前置部分】
+<!-- comet-task-ref:d710cdbb-2ec0-406f-8eb1-cbe82c1dc9ec -->
 
 **Files:**
 - Modify: `shared/src/commonMain/kotlin/com/github/ilife798/update/AppUpdatePlatform.kt`（文件末尾追加）
@@ -98,7 +101,7 @@ docs/openspec/changes/ios-platform-features/
   - `fun supportsReleasePageHandoff(): Boolean`（Android `false` / iOS `true`）
   - `fun openReleasePage(url: String): Boolean`（Android no-op 返回 `false` / iOS `UIApplication.openURL`）
 
-- [ ] **Step 1: 在 `AppUpdatePlatform.kt` 文件末尾追加两个 expect**
+- **Step 1: 在 `AppUpdatePlatform.kt` 文件末尾追加两个 expect**
 
 ```kotlin
 // 是否支持「跳转发布页下载」的更新移交：无 APK 安装概念的平台返回 true（design §4）。
@@ -108,7 +111,7 @@ expect fun supportsReleasePageHandoff(): Boolean
 expect fun openReleasePage(url: String): Boolean
 ```
 
-- [ ] **Step 2: 在 `AppUpdatePlatform.android.kt` 文件末尾追加两个 actual**
+- **Step 2: 在 `AppUpdatePlatform.android.kt` 文件末尾追加两个 actual**
 
 ```kotlin
 actual fun supportsReleasePageHandoff(): Boolean = false
@@ -118,7 +121,7 @@ actual fun openReleasePage(url: String): Boolean = false
 
 （Android 零行为变化：恒 `false`/no-op，Task 6 之前无任何调用方。）
 
-- [ ] **Step 3: 在 `AppUpdatePlatform.ios.kt` 中追加 actual 与 import**
+- **Step 3: 在 `AppUpdatePlatform.ios.kt` 中追加 actual 与 import**
 
 文件顶部 import 区追加两行：
 
@@ -142,12 +145,12 @@ actual fun openReleasePage(url: String): Boolean =
 
 （`openURL` 的绑定形态与 `Sponsor.ios.kt` 已合入主干并编译通过的写法一致；https 链接不受 ATS 限制，Info.plist 无需新增。）
 
-- [ ] **Step 4: 双门验证（Android 零回归确认点）**
+- **Step 4: 双门验证（Android 零回归确认点）**
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: 全部 PASS。绑定名/可空性与本文不符时按编译器提示修正（全局约束「绑定名原则」），不改签名。
 
-- [ ] **Step 5: 提交**
+- **Step 5: 提交**
 
 ```bash
 ./gradlew spotlessApply
@@ -158,6 +161,7 @@ git commit -m "feat: add release-page handoff expects with platform actuals (and
 ---
 
 ### Task 2: iOS 扫码页（AVCaptureSession + UIKitView）【tasks 1.1 + 1.2 代码部分】
+<!-- comet-task-ref:6dc264a4-d89f-4644-975d-4a703461cdb3 -->
 
 **Files:**
 - Modify: `shared/src/iosMain/kotlin/com/github/ilife798/ui/page/device/QrScannerPage.ios.kt`（整文件替换）
@@ -167,7 +171,7 @@ git commit -m "feat: add release-page handoff expects with platform actuals (and
 - Consumes: commonMain `@Composable expect fun QrScannerPage(onBack: () -> Unit, onResult: (String) -> Unit)`；调用方 `MainScaffold.kt:450` 的 `onResult = { raw -> viewModel.submitScannedRaw(raw); onBack(); ... }`（回填与导航由共享层负责，本页只回调原始文本）；miuix 组件 `TopAppBar`/`IconButton`/`MiuixIcons.Back`/`MiuixTheme`（Android 扫码页已在用，绑定已验证）。
 - Produces: iOS 扫码页完整行为——相机栈 + `UIKitView` 预览、首帧命中即停会话并回主线程 `onResult`、权限状态机（未决定请求 / 已授权启动 / 被拒提示 + 「前往设置」）、无相机降级提示、退出停会话防泄漏。Task 3 消费其运行时行为做验证；Task 7 真机复验识别回填。
 
-- [ ] **Step 1: 用以下内容整文件替换 `QrScannerPage.ios.kt`**
+- **Step 1: 用以下内容整文件替换 `QrScannerPage.ios.kt`**
 
 ```kotlin
 package com.github.ilife798.ui.page.device
@@ -486,7 +490,7 @@ private fun startCameraSession(
 - `CameraPreviewView.detach()` 中 `previewLayer.session = null` 若 `session` 属性绑定为非空，删除该行即可（会话已由 `DisposableEffect` 停止、层已移除）。
 - `UIKitView` 若不在 `androidx.compose.ui.viewinterop`（CMP 1.12 应在此），按 IDE 提示改 import。
 
-- [ ] **Step 2: 在 `iosApp/iosApp/Info.plist` 插入相机权限声明**
+- **Step 2: 在 `iosApp/iosApp/Info.plist` 插入相机权限声明**
 
 在 `<key>UIApplicationSupportsIndirectInputEvents</key><true/>` 与 `<key>UILaunchScreen</key>` 之间插入（缩进与文件一致用 Tab）：
 
@@ -495,12 +499,12 @@ private fun startCameraSession(
 	<string>扫码添加设备需要使用相机</string>
 ```
 
-- [ ] **Step 3: 双门验证**
+- **Step 3: 双门验证**
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: 全部 PASS。
 
-- [ ] **Step 4: 模拟器构建、安装、启动，验证渲染与页面关闭路径（tasks 1.1 验证点）**
+- **Step 4: 模拟器构建、安装、启动，验证渲染与页面关闭路径（tasks 1.1 验证点）**
 
 Run:
 ```bash
@@ -514,7 +518,7 @@ xcrun simctl launch booted com.github.ilife798.iosApp
 ```
 Expected: 构建与安装成功；进入「添加设备 → 扫一扫」：页面渲染出黑色背景 + 返回栏（首次弹相机权限弹窗，文案为 Info.plist 声明）；授权后因模拟器无摄像头显示「当前设备没有可用相机，无法扫码」，不崩溃；点返回可正常回退。
 
-- [ ] **Step 5: 提交**
+- **Step 5: 提交**
 
 ```bash
 ./gradlew spotlessApply
@@ -525,6 +529,7 @@ git commit -m "feat: implement iOS qr scanner page with AVCaptureSession and UIK
 ---
 
 ### Task 3: 扫码权限拒绝分支验证与证据记录【tasks 1.2 验证部分】
+<!-- comet-task-ref:e37b111b-055a-42f9-98bb-863feb44ddbb -->
 
 **Files:**
 - Create: `docs/openspec/changes/ios-platform-features/verification-evidence.md`
@@ -533,7 +538,7 @@ git commit -m "feat: implement iOS qr scanner page with AVCaptureSession and UIK
 - Consumes: Task 2 构建出的 `.app` 与其运行时行为。
 - Produces: 验证证据文件（本 change 后续任务共用）与扫码能力验证结论（tasks 1.2「验证权限拒绝分支不崩溃」）。
 
-- [ ] **Step 1: 模拟器上验证权限拒绝分支（权限弹窗为系统 UI，需手动点击；沿用 Task 2 的 sim-dd 构建产物）**
+- **Step 1: 模拟器上验证权限拒绝分支（权限弹窗为系统 UI，需手动点击；沿用 Task 2 的 sim-dd 构建产物）**
 
 操作序列与预期（逐项执行）：
 1. 应用已在模拟器运行；`xcrun simctl privacy booted reset camera com.github.ilife798.iosApp` 清掉已授权状态（若该 service 在当前 Xcode 的 `xcrun simctl privacy --help` 列表中不支持，则卸载重装应用重置弹窗：`xcrun simctl uninstall booted com.github.ilife798.iosApp && xcrun simctl install booted iosApp/build/sim-dd/Build/Products/Debug-iphonesimulator/iosApp.app`）。
@@ -542,7 +547,7 @@ git commit -m "feat: implement iOS qr scanner page with AVCaptureSession and UIK
 4. 点「前往设置」→ Expected: 跳出应用进入系统设置页；手动返回应用 → 应用界面完好，返回栏可用。
 5. 重新授权后再进入扫码页 → 显示「当前设备没有可用相机，无法扫码」（模拟器无摄像头路径，同时是 CI/模拟器不崩溃的钉子）。
 
-- [ ] **Step 2: 创建证据文件并写入扫码结论**
+- **Step 2: 创建证据文件并写入扫码结论**
 
 `docs/openspec/changes/ios-platform-features/verification-evidence.md` 初始内容如下（表格「待验证」在各任务执行后改为「通过/失败 + 一句结论」；后续任务追加第 2-5 节）：
 
@@ -578,7 +583,7 @@ git commit -m "feat: implement iOS qr scanner page with AVCaptureSession and UIK
 （Task 7 填写）
 ```
 
-- [ ] **Step 3: 提交**
+- **Step 3: 提交**
 
 ```bash
 git add docs/openspec/changes/ios-platform-features/verification-evidence.md
@@ -588,6 +593,7 @@ git commit -m "docs: record iOS scanning permission verification evidence"
 ---
 
 ### Task 4: iOS 运行通知（UNUserNotificationCenter 单通知槽）【tasks 2.1】
+<!-- comet-task-ref:c8cb6426-e32b-4260-ad9c-e2ef58c042cd -->
 
 **Files:**
 - Modify: `shared/src/iosMain/kotlin/com/github/ilife798/RunNotifications.ios.kt`（整文件替换）
@@ -597,7 +603,7 @@ git commit -m "docs: record iOS scanning permission verification evidence"
 - Consumes: commonMain `expect object RunNotifications`（`updateDevice(deviceId: String, deviceName: String, running: Boolean)` / `updateTask(gained: Int)` / `removeTask()`，调用方 `DeviceController`/`TaskController` 不变）；调用时序事实：`TaskController` 先 `requestNotificationPermission()`（iOS 上是 no-op）再 `updateTask(0)`，因此通知权限请求由本实现的投递路径自行发起（design §2「首次实际需要展示前请求」）。
 - Produces: 设备状态 → 通知 id `ilife798.device`（running=true 发「设备 {name} 运行中」，false 时清除）；积分任务 → id `ilife798.task`（「积分任务已获得 N 分」，`removeTask()` 清除）；同 id `add` 覆盖刷新；未授权静默跳过。Swift 侧 `NotificationDelegate`（前台横幅）。
 
-- [ ] **Step 1: 用以下内容整文件替换 `RunNotifications.ios.kt`**
+- **Step 1: 用以下内容整文件替换 `RunNotifications.ios.kt`**
 
 ```kotlin
 package com.github.ilife798
@@ -676,7 +682,7 @@ actual object RunNotifications {
 
 （绑定名说明：`currentNotificationCenter()` / `requestAuthorizationWithOptions(_:completionHandler:)` / `requestWithIdentifier(identifier:content:trigger:)` / `defaultSound()` 按 ObjC selector 绑定，与编译器提示不符时按提示修正，不改通知 id 与文案。）
 
-- [ ] **Step 2: 用以下内容整文件替换 `iOSApp.swift`（追加 NotificationDelegate 与挂载）**
+- **Step 2: 用以下内容整文件替换 `iOSApp.swift`（追加 NotificationDelegate 与挂载）**
 
 ```swift
 import SwiftUI
@@ -725,7 +731,7 @@ struct iOSApp: App {
 }
 ```
 
-- [ ] **Step 3: 双门 + Swift 工程门（iOSApp.swift 变更 Gradle 不覆盖）**
+- **Step 3: 双门 + Swift 工程门（iOSApp.swift 变更 Gradle 不覆盖）**
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
@@ -738,14 +744,14 @@ xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Debug 
 ```
 Expected: PASS。
 
-- [ ] **Step 4: 模拟器验证两条路径（需有效测试账号登录；权限弹窗手动点击）**
+- **Step 4: 模拟器验证两条路径（需有效测试账号登录；权限弹窗手动点击）**
 
 安装并启动（沿用 Task 2 命令），逐项验证：
 1. 授权路径：首次启动设备任务 → 系统通知权限弹窗出现 → 点「允许」→ 通知中心/横幅出现「设备 {name} 运行中」；应用保持前台时（delegate 生效）横幅以 banner 形式展示；停止设备 → 对应通知消失。启动积分任务 → 「积分任务已获得 N 分」随进度刷新；任务结束 → 通知消失。
 2. 拒绝路径（Review Focus #3 的钉子）：卸载重装后首次弹权限时点「不允许」→ 再次启动设备/积分任务 → 任务照常运行（任务日志正常滚动）、无通知展示、应用不崩溃。
 3. 记录：将两路径结果写入 `verification-evidence.md` 第 2 节表格（「待验证」改为结论）。
 
-- [ ] **Step 5: 提交**
+- **Step 5: 提交**
 
 ```bash
 ./gradlew spotlessApply
@@ -756,6 +762,7 @@ git commit -m "feat: implement iOS run notifications via UNUserNotificationCente
 ---
 
 ### Task 5: iOS 支付跳转（支付宝 URL Scheme）【tasks 3.1】
+<!-- comet-task-ref:9cf511bc-5ba2-4981-8eb8-0c086c52502b -->
 
 **Files:**
 - Modify: `shared/src/iosMain/kotlin/com/github/ilife798/pay/Alipay.ios.kt`（整文件替换）
@@ -765,7 +772,7 @@ git commit -m "feat: implement iOS run notifications via UNUserNotificationCente
 - Consumes: commonMain `expect suspend fun payWithAlipay(orderInfo: String): AlipayPayResult` 与 `data class AlipayPayResult(success: Boolean, message: String)`；调用方 `WalletBillController.submitRecharge`（结果 message 由 `BillPage` 经 `showToast` 展示——iOS Toast 静默，见 Review Focus #5，故本实现加 `logDebug` 供验证观测）；后端 `prepayAlipay` 返回的签名 orderInfo（与 Android SDK 同一份，零后端改动）。
 - Produces: iOS 支付分支语义——未安装 → `AlipayPayResult(false, "未安装支付宝")`；已安装跳转成功 → `AlipayPayResult(false, "已跳转支付宝，支付结果确认中，请稍后刷新余额")`（语义对齐 Android 8000/6004 分支，design §3）；唤起失败/异常 → `AlipayPayResult(false, "支付失败：…")`。
 
-- [ ] **Step 1: 用以下内容整文件替换 `Alipay.ios.kt`**
+- **Step 1: 用以下内容整文件替换 `Alipay.ios.kt`**
 
 ```kotlin
 package com.github.ilife798.pay
@@ -818,7 +825,7 @@ private const val ALIPAY_STARTAPP_URL = "alipays://platformapi/startapp"
 
 （绑定名说明：`NSCharacterSet.alphanumericCharacterSet` 为类属性绑定，若编译器提示为函数调用形态改 `alphanumericCharacterSet()`；`stringByAddingPercentEncodingWithAllowedCharacters` 返回 `NSString?`，`(orderInfo as NSString)` 与 `(encoded as String)` 为 K/N 字符串桥接惯用写法；`canOpenURL`/`openURL` 与 `Sponsor.ios.kt` 主干写法一致。）
 
-- [ ] **Step 2: 在 `iosApp/iosApp/Info.plist` 插入 scheme 查询声明**
+- **Step 2: 在 `iosApp/iosApp/Info.plist` 插入 scheme 查询声明**
 
 在 Task 2 加入的 `NSCameraUsageDescription` 键值对之后插入（缩进用 Tab）：
 
@@ -830,12 +837,12 @@ private const val ALIPAY_STARTAPP_URL = "alipays://platformapi/startapp"
 	</array>
 ```
 
-- [ ] **Step 3: 双门验证**
+- **Step 3: 双门验证**
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [ ] **Step 4: 模拟器验证未安装分支（需有效测试账号登录；模拟器无支付宝，恰好覆盖未安装路径）**
+- **Step 4: 模拟器验证未安装分支（需有效测试账号登录；模拟器无支付宝，恰好覆盖未安装路径）**
 
 ```bash
 plutil -lint iosApp/iosApp/Info.plist
@@ -847,7 +854,7 @@ xcrun simctl launch --console-pty booted com.github.ilife798.iosApp
 ```
 在账单页发起充值（选择任一金额）：Expected: `payWithAlipay` 返回未安装分支——console 出现 `[Alipay] alipay not installed`，应用不崩溃、支付流程可安全重试（再次点击仍正常返回）。将结果写入 `verification-evidence.md` 第 3 节。
 
-- [ ] **Step 5: 提交**
+- **Step 5: 提交**
 
 ```bash
 ./gradlew spotlessApply
@@ -858,6 +865,7 @@ git commit -m "feat: implement iOS alipay url-scheme payment launch"
 ---
 
 ### Task 6: 更新移交（Releases 页跳转）【tasks 4.1】
+<!-- comet-task-ref:d710cdbb-2ec0-406f-8eb1-cbe82c1dc9ec -->
 
 **Files:**
 - Modify: `shared/src/commonMain/kotlin/com/github/ilife798/update/AppUpdate.kt`（object 内 + 常量）
@@ -867,14 +875,14 @@ git commit -m "feat: implement iOS alipay url-scheme payment launch"
 - Consumes: Task 1 的 `supportsReleasePageHandoff(): Boolean` 与 `openReleasePage(url: String): Boolean`（同包，无需 import）；既有 `UpdateDialogState.Available(version)` 弹窗链路（`UpdateDialogs.kt` 的 Available → `viewModel.startUpdate()` 已存在，UI 零改动，design §4）；`UpdateController.checkForUpdate` 中 `asset == null` 的现状分支（`shared/src/commonMain/kotlin/com/github/ilife798/update/UpdateController.kt:69-73`）。
 - Produces: iOS 检查更新发现新版本且无匹配资产 → `pendingReleasePage = true` 并弹 `Available(remoteVersion)`；确认更新 → `openReleasePage(RELEASES_PAGE_URL)` + 提示 + 关对话框；Android 路径逐字不变。
 
-- [ ] **Step 1: 在 `AppUpdate.kt` 的 `object AppUpdate {` 内新增常量（置于首行成员位置）**
+- **Step 1: 在 `AppUpdate.kt` 的 `object AppUpdate {` 内新增常量（置于首行成员位置）**
 
 ```kotlin
     // iOS 更新移交目标：项目发布页（design §4；https 不受 ATS 限制，Info.plist 无需新增）。
     const val RELEASES_PAGE_URL = "https://github.com/Jursin/ilife798/releases"
 ```
 
-- [ ] **Step 2: 修改 `UpdateController.kt`（3 处）**
+- **Step 2: 修改 `UpdateController.kt`（3 处）**
 
 2a. 在 `private var pendingUpdateUrl = ""` 声明之后新增一行字段：
 
@@ -936,17 +944,17 @@ git commit -m "feat: implement iOS alipay url-scheme payment launch"
 
 （`pendingReleasePage` 无需在 dismiss/stop 路径重置：`startUpdate` 只能经 Available 弹窗的「更新」按钮到达，且每次 checkForUpdate 命中移交分支都会重设该标记。）
 
-- [ ] **Step 3: 逐字 diff 核对 Android 路径（Review Focus #1 的钉子）**
+- **Step 3: 逐字 diff 核对 Android 路径（Review Focus #1 的钉子）**
 
 核对 `git diff shared/src/commonMain/kotlin/com/github/ilife798/update/UpdateController.kt`：
 Expected: 除上述 3 处外无其它改动；Android 分支（`else if (!silent) onToast("暂无本设备安装包")`）与原实现输出相同；下载、进度、安装、`onAppResumed`、`openInstallSettings` 等函数体零变化。
 
-- [ ] **Step 4: 双门验证**
+- **Step 4: 双门验证**
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [ ] **Step 5: 模拟器验证更新全流程（design §6：版本比较对 GitHub API 真实可用，跳转 Safari 打开 Releases 页）**
+- **Step 5: 模拟器验证更新全流程（design §6：版本比较对 GitHub API 真实可用，跳转 Safari 打开 Releases 页）**
 
 1. 强制走「发现新版本」路径：临时把 `iosApp/Configuration/Config.xcconfig` 的 `MARKETING_VERSION` 改为 `0.0.1`（本地验证用，不入库；`getAppVersion()` 读 CFBundleShortVersionString = 该值，任何线上 release 均大于它）。
 2. 构建、安装、启动（命令同 Task 5 步骤 4，`plutil -lint` 不再需要）；进入「我的 → 检查更新」。
@@ -955,7 +963,7 @@ Expected: PASS。
 5. 断网复验（替代路径）：关闭模拟器网络再检查更新 → 提示「检查更新失败」，不崩溃。
 6. 记录：写入 `verification-evidence.md` 第 4 节。
 
-- [ ] **Step 6: 提交**
+- **Step 6: 提交**
 
 ```bash
 ./gradlew spotlessApply
@@ -966,6 +974,7 @@ git commit -m "feat: hand off iOS update flow to releases page"
 ---
 
 ### Task 7: 真机端到端验证与收尾回归【tasks 5.1】
+<!-- comet-task-ref:d4826d18-1034-491d-86a7-c5bccb3357b1 -->
 
 **Files:**
 - Modify: `docs/openspec/changes/ios-platform-features/verification-evidence.md`（补全真机与回归结论）
@@ -974,7 +983,7 @@ git commit -m "feat: hand off iOS update flow to releases page"
 - Consumes: Task 1-6 全部改动；base-ref `f56e965`。
 - Produces: 四能力真机端到端结论 + Android CI 全量回归结论 + 文件边界核对记录（tasks 5.1 收口）。
 
-- [ ] **Step 1: iOS 真机（用户自签安装）端到端验证**
+- **Step 1: iOS 真机（用户自签安装）端到端验证**
 
 用户以自有证书自签安装（`iosApp/Configuration/Config.xcconfig` 填 `DEVELOPMENT_TEAM` 后经 Xcode 安装，或用既有未签名 IPA 重签）。逐项验证并记录（模拟器无法覆盖的项以真机为准）：
 1. 扫码：对准有效二维码 → 识别内容回填设备编号流程、扫码页自动关闭，且仅回填一次（Review Focus #2）。
@@ -982,12 +991,12 @@ git commit -m "feat: hand off iOS update flow to releases page"
 3. 支付：真机已装支付宝发起真实充值 → 支付宝被唤起进入收银台（Review Focus #4：真实签名 orderInfo 跳转）；返回应用后按提示稍后刷新余额确认到账；若新版支付宝对 `orderSuffix` 跳转失败（design §7 风险 1），降级提示出现且不崩溃，把失败结论记入证据与 change 目录（后续换 universal link 的输入）。
 4. 更新：检查更新 → 确认 → Safari 打开 Releases 页，可下载最新 IPA。
 
-- [ ] **Step 2: Android CI 全量回归门**
+- **Step 2: Android CI 全量回归门**
 
 Run: `./gradlew spotlessCheck :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: 全部 PASS（等价 android.yml validate 核心任务集）；推送分支后确认 PR 上 android.yml 与 ios.yml 双绿（`gh run watch`）。
 
-- [ ] **Step 3: iOS 构建门与打包**
+- **Step 3: iOS 构建门与打包**
 
 Run:
 ```bash
@@ -996,7 +1005,7 @@ Run:
 ```
 Expected: 编译与打包 PASS（沿用 ios.yml 链路）。
 
-- [ ] **Step 4: 文件边界核对**
+- **Step 4: 文件边界核对**
 
 Run:
 ```bash
@@ -1005,7 +1014,7 @@ git diff --name-only f56e965...HEAD | grep -c "^\.comet/" || echo 0
 ```
 Expected: 文件清单仅落在「文件结构」小节列出的路径与计划/证据文档；`.comet/` 计数为 0；androidApp 与 `.github/workflows/android.yml` 不在清单中。结论记入证据文件第 5 节。
 
-- [ ] **Step 5: 归档证据并提交**
+- **Step 5: 归档证据并提交**
 
 ```bash
 git add docs/openspec/changes/ios-platform-features/verification-evidence.md
