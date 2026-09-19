@@ -2,9 +2,16 @@ package com.github.ilife798.update
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
+import io.ktor.client.plugins.HttpTimeout
 
-// 更新检查用独立 HttpClient（Task 6 补齐与 Android 同等的超时语义）。
-actual fun createUpdateHttpClient(): HttpClient = HttpClient(Darwin)
+// 更新检查用独立 HttpClient；Darwin 引擎不支持独立的 connect/socket 超时，
+// 仅设置与 Android 同语义的 60s 请求超时。
+actual fun createUpdateHttpClient(): HttpClient =
+    HttpClient(Darwin) {
+        install(HttpTimeout) {
+            requestTimeoutMillis = 60_000
+        }
+    }
 
 // iOS 端不支持 APK 安装/应用内更新；系列接口按设计提供安全空实现。
 actual fun currentAbis(): List<String> = emptyList()
