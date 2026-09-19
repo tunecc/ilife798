@@ -6,6 +6,7 @@ import androidx.compose.runtime.setValue
 import com.github.ilife798.AppStorage
 import com.github.ilife798.StorageKeys
 import com.github.ilife798.getAppVersion
+import com.github.ilife798.logDebug
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -78,6 +79,7 @@ class UpdateController(
                         }
                         return@launch
                     }
+                    pendingReleasePage = false
                     pendingUpdateUrl = asset.browserDownloadUrl
                     pendingUpdateSha256 = asset.digest?.substringAfter(':')?.takeIf { it.isNotBlank() }
                     pendingUpdateSize = asset.size
@@ -102,7 +104,8 @@ class UpdateController(
         if (downloadingUpdate) return
         if (pendingReleasePage) {
             // 移交路径：打开发布页后关闭对话框，不进入下载/安装流程
-            openReleasePage(AppUpdate.RELEASES_PAGE_URL)
+            val opened = openReleasePage(AppUpdate.RELEASES_PAGE_URL)
+            logDebug("UpdateController", "openReleasePage: $opened")
             onToast("已打开发布页，请下载最新 IPA")
             pendingReleasePage = false
             dialog = UpdateDialogState.None

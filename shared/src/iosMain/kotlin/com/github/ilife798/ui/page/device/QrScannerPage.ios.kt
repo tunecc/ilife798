@@ -46,6 +46,7 @@ import platform.AVFoundation.AVCaptureOutput
 import platform.AVFoundation.AVCaptureSession
 import platform.AVFoundation.AVCaptureSessionPresetHigh
 import platform.AVFoundation.AVCaptureVideoPreviewLayer
+import platform.AVFoundation.AVLayerVideoGravityResizeAspectFill
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.AVMetadataMachineReadableCodeObject
 import platform.AVFoundation.AVMetadataObjectTypeQRCode
@@ -53,10 +54,12 @@ import platform.AVFoundation.authorizationStatusForMediaType
 import platform.AVFoundation.defaultDeviceWithDeviceType
 import platform.AVFoundation.requestAccessForMediaType
 import platform.CoreGraphics.CGRectZero
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSURL
 import platform.QuartzCore.CATransaction
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
+import platform.UIKit.UIApplicationWillEnterForegroundNotification
 import platform.UIKit.UIView
 import platform.darwin.DISPATCH_QUEUE_PRIORITY_DEFAULT
 import platform.darwin.NSObject
@@ -64,6 +67,7 @@ import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
 import platform.darwin.dispatch_queue_create
+import platform.darwin.dispatch_queue_t
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -94,9 +98,8 @@ actual fun QrScannerPage(
     // 相机会话专用串行队列：start/stop 串行化，避免退出与启动竞态导致相机保持占用
     val cameraQueue = remember { dispatch_queue_create("ilife798.qrscanner.session", null) }
     val metadataDelegate =
-        remember(session, handled) {
+        remember(handled) {
             QrMetadataDelegate(
-                session = session,
                 handled = handled,
                 onResult = { value -> currentOnResult(value) },
             )
@@ -114,11 +117,29 @@ actual fun QrScannerPage(
         }
     }
 
+    // 从系统设置返回（前往设置开启权限后）：回前台时重读权限状态，触发 effect 重启。
+    DisposableEffect(Unit) {
+        val observer =
+            NSNotificationCenter.defaultCenter.addObserverForName(
+                name = UIApplicationWillEnterForegroundNotification,
+                `object` = null,
+                queue = null,
+            ) { _ ->
+                authStatus =
+                    AVCaptureDevice.authorizationStatusForMediaType(mediaType = AVMediaTypeVideo)
+            }
+        onDispose {
+            NSNotificationCenter.defaultCenter.removeObserver(observer)
+        }
+    }
+
     // 已授权：串行队列配置并启动相机；权限状态变化或页面退出时停止会话。
     DisposableEffect(authStatus) {
         if (authStatus == AVAuthorizationStatusAuthorized) {
+            // 首次授权流程：旧 effect 的 onDispose 已把 handled 置 1，重启相机前复位
+            handled.value = 0
             dispatch_async(cameraQueue) {
-                startCameraSession(session, metadataDelegate) { available ->
+                startCameraSession(session, metadataDelegate, cameraQueue) { available ->
                     dispatch_async(dispatch_get_main_queue()) { cameraAvailable = available }
                 }
             }
@@ -212,7 +233,6 @@ actual fun QrScannerPage(
 
 // 二维码识别回调：MetadataOutput 在后台队列派发；首帧命中即停会话并回主线程上报一次。
 private class QrMetadataDelegate(
-    private val session: AVCaptureSession,
     private val handled: AtomicInt,
     private val onResult: (String) -> Unit,
 ) : NSObject(),
@@ -230,7 +250,6 @@ private class QrMetadataDelegate(
                 ?.stringValue
                 ?: return
         if (!handled.compareAndSet(0, 1)) return
-        runCatching { session.stopRunning() }
         dispatch_async(dispatch_get_main_queue()) {
             onResult(value)
         }
@@ -246,6 +265,7 @@ private class CameraPreviewView(
 
     init {
         layer.addSublayer(previewLayer)
+        previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill
     }
 
     override fun layoutSubviews() {
@@ -270,6 +290,7 @@ private class CameraPreviewView(
 private fun startCameraSession(
     session: AVCaptureSession,
     metadataDelegate: QrMetadataDelegate,
+    callbackQueue: dispatch_queue_t,
     onCameraAvailable: (Boolean) -> Unit,
 ) {
     try {
@@ -304,7 +325,7 @@ private fun startCameraSession(
         session.addOutput(output)
         output.setMetadataObjectsDelegate(
             metadataDelegate,
-            queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT.toLong(), 0u),
+            queue = callbackQueue,
         )
         output.metadataObjectTypes = listOf(AVMetadataObjectTypeQRCode)
         session.commitConfiguration()

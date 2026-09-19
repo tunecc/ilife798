@@ -36,6 +36,9 @@ actual object RunNotifications {
         remove(TASK_NOTIFICATION_ID)
     }
 
+    // 已首次响铃过的通知 id：后续同 id 刷新静默（对齐 Android setOnlyAlertOnce）。
+    private val alertedIds = mutableSetOf<String>()
+
     // 授权就绪才投递：未决定时系统弹窗、已授权时立即回调；清除类操作（remove）无需权限。
     private fun post(
         id: String,
@@ -46,10 +49,13 @@ actual object RunNotifications {
             UNAuthorizationOptionAlert or UNAuthorizationOptionSound,
         ) { granted, _ ->
             if (granted) {
+                val firstAlert = alertedIds.add(id) // 竞态代价仅为偶发一次重复响铃，可接受
                 val content =
                     UNMutableNotificationContent().apply {
                         setBody(body)
-                        setSound(UNNotificationSound.defaultSound())
+                        if (firstAlert) {
+                            setSound(UNNotificationSound.defaultSound())
+                        }
                     }
                 val request =
                     UNNotificationRequest.requestWithIdentifier(
