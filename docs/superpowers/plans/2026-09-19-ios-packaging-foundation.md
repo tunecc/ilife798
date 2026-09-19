@@ -2,6 +2,7 @@
 change: ios-packaging-foundation
 design-doc: docs/superpowers/specs/2026-09-19-ios-packaging-foundation-design.md
 base-ref: af15849e271391da91d578d3fe6090ccff5fcada
+archived-with: 2026-09-19-ios-packaging-foundation
 ---
 
 <!-- comet-task-authority: docs/openspec/changes/ios-packaging-foundation/tasks.md -->
