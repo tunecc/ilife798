@@ -27,7 +27,7 @@ actual fun systemDynamicColorKey(): Color? =
                 ?.windows
                 ?.firstOrNull { (it as? UIWindow)?.isKeyWindow() == true } as? UIWindow
                 ?: return null
-        val tint: UIColor = window.tintColor ?: return null
+        val tint: UIColor = window.tintColor
         memScoped {
             val r = alloc<CGFloatVar>()
             val g = alloc<CGFloatVar>()

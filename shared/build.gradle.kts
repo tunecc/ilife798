@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -32,6 +33,62 @@ compose.resources {
     publicResClass = true
     packageOfResClass = "com.github.ilife798.shared.resources"
 }
+
+// —— iOS 构建期常量注入（与 Android secrets.properties 同源；缺省空字符串）——
+// 来源优先级：环境变量 ILIFE798_* → 根目录 secrets.properties → 空字符串。
+fun resolveIosBuildConfig(
+    envKey: String,
+    propKey: String,
+): String {
+    System.getenv(envKey)?.takeIf { it.isNotBlank() }?.let { return it }
+    val secretsFile = rootProject.file("secrets.properties")
+    if (secretsFile.exists()) {
+        val props = Properties()
+        secretsFile.inputStream().use { props.load(it) }
+        props.getProperty(propKey)?.takeIf { it.isNotBlank() }?.let { return it }
+    }
+    return ""
+}
+
+val iosApiGateway = resolveIosBuildConfig("ILIFE798_API_GATEWAY", "API_GATEWAY")
+val iosSignSalt = resolveIosBuildConfig("ILIFE798_SIGN_SALT", "SIGN_SALT")
+val iosApiCid = resolveIosBuildConfig("ILIFE798_API_CID", "API_CID")
+
+val generateIosBuildConfig =
+    tasks.register("generateIosBuildConfig") {
+        val generatedDir = layout.buildDirectory.dir("generated/iosBuildConfig/kotlin")
+        val apiGateway = iosApiGateway
+        val signSalt = iosSignSalt
+        val apiCid = iosApiCid
+        inputs.property("apiGateway", apiGateway)
+        inputs.property("signSalt", signSalt)
+        inputs.property("apiCid", apiCid)
+        outputs.dir(generatedDir)
+        doLast {
+            // Kotlin 字符串字面量转义：保证网关/盐值中的 $、"、\ 不破坏生成代码。
+            // 注意：必须是 doLast 内的局部函数——配置缓存禁止 task action 引用脚本级对象。
+            fun escapeKotlinStringLiteral(raw: String): String =
+                raw
+                    .replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("$", "\\$")
+
+            val packageDir = generatedDir.get().dir("com/github/ilife798/buildConfig").asFile
+            packageDir.mkdirs()
+            packageDir.resolve("IosBuildConfig.kt").writeText(
+                """
+                |package com.github.ilife798.buildConfig
+                |
+                |// 由 Gradle 任务 generateIosBuildConfig 生成，勿手动修改，不入库。
+                |object IosBuildConfig {
+                |    const val API_GATEWAY: String = "${escapeKotlinStringLiteral(apiGateway)}"
+                |    const val SIGN_SALT: String = "${escapeKotlinStringLiteral(signSalt)}"
+                |    const val API_CID: String = "${escapeKotlinStringLiteral(apiCid)}"
+                |}
+                """.trimMargin(),
+            )
+        }
+    }
 
 kotlin {
     compilerOptions {
@@ -84,6 +141,9 @@ kotlin {
         iosMain.dependencies {
             implementation(libs.ktor.darwin)
         }
+        iosMain {
+            kotlin.srcDir(layout.buildDirectory.dir("generated/iosBuildConfig/kotlin"))
+        }
         commonMain.dependencies {
             @Suppress("DEPRECATION")
             implementation("org.jetbrains.compose.components:components-resources:${libs.versions.composeMultiplatform.get()}")
@@ -122,4 +182,11 @@ tasks
             )
     }.configureEach {
         dependsOn("exportLibraryDefinitions")
+    }
+
+// 保证增量正确性：iOS 编译任务依赖生成任务。
+tasks
+    .withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>()
+    .configureEach {
+        if (name.contains("Ios")) dependsOn(generateIosBuildConfig)
     }
