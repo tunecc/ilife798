@@ -2,6 +2,7 @@
 change: ios-platform-features
 design-doc: docs/superpowers/specs/2026-09-19-ios-platform-features-design.md
 base-ref: f56e965
+archived-with: 2026-09-19-ios-platform-features
 ---
 
 <!-- comet-task-authority: docs/openspec/changes/ios-platform-features/tasks.md -->

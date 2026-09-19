@@ -2,6 +2,8 @@
 comet_change: ios-platform-features
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-09-19-ios-platform-features
+status: final
 ---
 
 # 深度技术设计：iOS 平台功能替代实现
