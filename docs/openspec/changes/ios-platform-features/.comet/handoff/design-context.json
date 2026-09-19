@@ -1,0 +1,19 @@
+{
+  "change": "ios-platform-features",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "task_hash_policy": "task-content-v1",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "2d21876200c1577b64fe457d91350460cfbc25800af2274739be1b632f9f7541",
+  "files": [
+    { "path": "docs/openspec/changes/ios-platform-features/proposal.md", "sha256": "d6823cdc43efa5912b16eb87c146d3d7c92d7e8debdb317c1866d41bd96766ff" },
+    { "path": "docs/openspec/changes/ios-platform-features/design.md", "sha256": "253c44244648377414d23d2d8e9cc19df9776a7b36bb159cb7eb54a06f85981d" },
+    { "path": "docs/openspec/changes/ios-platform-features/tasks.md", "sha256": "5667f1f343d1e31b63faf7d3f1ffac03c17c953c7240549d20ed533958d5eaeb" },
+    { "path": "docs/openspec/changes/ios-platform-features/.openspec.yaml", "sha256": "e461a5cd9c263851dbb46471f9e3afd45a09338ec7b15a042283644a5ef6972b" },
+    { "path": "docs/openspec/changes/ios-platform-features/specs/ios-notifications/spec.md", "sha256": "80eb3b15b1fa767ce8f29b0dcbd1b8cb341eaf18e178b6f0e9ad81b38542567d" },
+    { "path": "docs/openspec/changes/ios-platform-features/specs/ios-payment-launch/spec.md", "sha256": "928c33cb9cee770263290143eb5987db461dadac76482d776283a18851a6dd29" },
+    { "path": "docs/openspec/changes/ios-platform-features/specs/ios-scanning/spec.md", "sha256": "109403e3d9450e9913feec05c8fb657e222daa782d71611b8550713b56328f8d" },
+    { "path": "docs/openspec/changes/ios-platform-features/specs/ios-update-handoff/spec.md", "sha256": "c7cb10ad5ffa0f0ab639d010b42a3ad3562f928c13bff4bf40e430095f28c990" }
+  ]
+}
