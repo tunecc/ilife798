@@ -11,7 +11,8 @@
 
 ## CI 端到端
 
-- draft PR（fork 内）：tunecc/ilife798#1，run 35420876034，validate job 于 macos-latest 实跑（结果见 PR CI 状态；release job 的 tag 触发路径待首个正式 tag 验证——`view || create` + `upload --clobber` 幂等逻辑与 android.yml 同源）。
+- draft PR（fork 内）：tunecc/ilife798#1。首次推送触发的 run 35420876034 被后续 push 的并发取消（concurrency cancel-in-progress，属预期）；**成功 run 为 35420968685**（validate job 于 macos-latest 全绿，11m49s，含无证书 runner 上完整编译 + 打包 + artifact 上传）——macos runner 无需 strip 缓解，Xcode 16.4 strip 问题仅存在于本机工具链。
+- release job 的 tag 触发路径待首个正式 tag 验证（`view || create` + `upload --clobber` 幂等逻辑与 android.yml 同源，且额外带 create 失败回退）。
 
 ## PR 文件边界核对（base af15849）
 

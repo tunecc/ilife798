@@ -142,7 +142,8 @@ kotlin {
             implementation(libs.ktor.darwin)
         }
         iosMain {
-            kotlin.srcDir(layout.buildDirectory.dir("generated/iosBuildConfig/kotlin"))
+            // 直接引用任务 provider：Gradle 自动建立编译任务对生成任务的依赖。
+            kotlin.srcDir(generateIosBuildConfig)
         }
         commonMain.dependencies {
             @Suppress("DEPRECATION")
@@ -182,11 +183,4 @@ tasks
             )
     }.configureEach {
         dependsOn("exportLibraryDefinitions")
-    }
-
-// 保证增量正确性：iOS 编译任务依赖生成任务。
-tasks
-    .withType<org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile>()
-    .configureEach {
-        if (name.contains("Ios")) dependsOn(generateIosBuildConfig)
     }

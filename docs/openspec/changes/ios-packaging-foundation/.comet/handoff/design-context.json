@@ -1,0 +1,17 @@
+{
+  "change": "ios-packaging-foundation",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "task_hash_policy": "task-content-v1",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "d86f17d509efd0ad75485f2eb655a650623a81e0d62acb7370fa4a243357bef6",
+  "files": [
+    { "path": "docs/openspec/changes/ios-packaging-foundation/proposal.md", "sha256": "9cc74c1a7f3d031e8f669f3300319faa6f1d45c78fbb75f57a720ffab3d245c4" },
+    { "path": "docs/openspec/changes/ios-packaging-foundation/design.md", "sha256": "9c4e3eb94c50bdc86a9eaa9376f788491e339819561e165adbfe4a4bef9eb70f" },
+    { "path": "docs/openspec/changes/ios-packaging-foundation/tasks.md", "sha256": "92e4efba911a339f35d6d66157dfd8a0b209a8dd937735a7e1ffe86b1b88cc97" },
+    { "path": "docs/openspec/changes/ios-packaging-foundation/.openspec.yaml", "sha256": "e461a5cd9c263851dbb46471f9e3afd45a09338ec7b15a042283644a5ef6972b" },
+    { "path": "docs/openspec/changes/ios-packaging-foundation/specs/ios-build/spec.md", "sha256": "d228956c982884e680ef8829b8b2537b163797a531ae5cc7cc5d7f3e055261cd" },
+    { "path": "docs/openspec/changes/ios-packaging-foundation/specs/ios-ci/spec.md", "sha256": "04edadb0243266cd142ad6ac58055c69fc3ada2c2f2f05d1304d8c54ed60c775" }
+  ]
+}

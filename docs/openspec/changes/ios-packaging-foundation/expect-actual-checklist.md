@@ -6,7 +6,7 @@
 |---|---|---|---|---|
 | 1 | PersistentStorage.kt | 1 | PersistentStorage.ios.kt | 真实现（NSUserDefaults，key 前缀 ilife798.） |
 | 2 | Clipboard.kt | 1 | Clipboard.ios.kt | 真实现（UIPasteboard） |
-| 3 | util/TimeUtils.kt | 5 | util/TimeUtils.ios.kt | 真实现（NSDateFormatter；周一=1..周日=7 语义对齐 Android） |
+| 3 | util/TimeUtils.kt | 5 | util/TimeUtils.ios.kt | 真实现（NSDateFormatter；周几用 NSCalendar weekday 换算——ICU "u" 是 Extended Year 不能用） |
 | 4 | Version.kt | 2 | Version.ios.kt | 真实现（NSBundle） |
 | 5 | Logger.kt | 1 | Logger.ios.kt | 真实现（NSLog） |
 | 6 | ImageConversion.kt | 1 | ImageConversion.ios.kt | 真实现（Skia 解码，失败占位不崩） |
@@ -25,3 +25,7 @@
 合计：17 文件 / 34 声明，编译器核对通过。
 
 Change 2（ios-platform-features）待替换项：#8 的 stub 部分（更新改为跳转发布页）、#13（AVFoundation 扫码）、#14（UNUserNotificationCenter 通知）、#15（支付宝 URL Scheme）、#16（Toast HUD 评估）。
+
+补充记录（code review 2026-09-19）：
+- #10 DynamicColorKey：SwiftUI 壳未显式设置全局 tint 时读取到的 tintColor 恒为系统默认色，「动态跟随强调色」实为常量回退路径；如需真实跟随系统强调色需 Change 2 在壳层桥接（记录为已知灰区）。
+- #12 Sponsor：使用已废弃的 `openURL(_:)`（iOS 15 目标下可用且返回 Bool 语义正确）；Change 2 顺手可迁 `open(_:options:completionHandler:)`。

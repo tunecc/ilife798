@@ -61,6 +61,12 @@ jobs:
           printf 'SIGN_SALT=%s\n' "$SIGN_SALT" >> secrets.properties
           printf 'API_CID=%s\n' "$API_CID" >> secrets.properties
 
+      - name: Warn on missing secrets
+        run: |
+          for f in API_GATEWAY SIGN_SALT API_CID; do
+            grep -q "^$f=..*$" secrets.properties || echo "::warning::secrets.$f 未配置——构建可用，但产出的 IPA 访问后端会失败"
+          done
+
       - name: Compile iOS targets
         run: ./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 --no-daemon --stacktrace
 
@@ -118,6 +124,12 @@ jobs:
           printf 'API_GATEWAY=%s\n' "$API_GATEWAY" > secrets.properties
           printf 'SIGN_SALT=%s\n' "$SIGN_SALT" >> secrets.properties
           printf 'API_CID=%s\n' "$API_CID" >> secrets.properties
+
+      - name: Fail on missing release secrets
+        run: |
+          for f in API_GATEWAY SIGN_SALT API_CID; do
+            grep -q "^$f=..*$" secrets.properties || { echo "::error::release secrets.$f 未配置"; exit 1; }
+          done
 
       - name: Build unsigned IPA
         run: ./iosApp/scripts/build-unsigned-ipa.sh

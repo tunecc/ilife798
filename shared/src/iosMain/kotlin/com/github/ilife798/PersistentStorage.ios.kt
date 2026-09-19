@@ -45,11 +45,12 @@ actual class PersistentStorage {
     actual fun getInt(
         key: String,
         defaultValue: Int,
-    ): Int {
-        // 本类只经 saveInt 写入；经字符串读取回避 NSNumber 绑定的 API 差异。
-        val raw = defaults.stringForKey("$KEY_PREFIX$key") ?: return defaultValue
-        return raw.toIntOrNull() ?: defaultValue
-    }
+    ): Int =
+        if (defaults.objectForKey("$KEY_PREFIX$key") == null) {
+            defaultValue
+        } else {
+            defaults.integerForKey("$KEY_PREFIX$key").toInt()
+        }
 
     private companion object {
         const val KEY_PREFIX = "ilife798."
