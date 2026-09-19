@@ -6,8 +6,6 @@ base-ref: f56e965
 
 <!-- comet-task-authority: docs/openspec/changes/ios-platform-features/tasks.md -->
 
-<!-- comet-task-authority: docs/openspec/changes/ios-platform-features/tasks.md -->
-
 # iOS 平台功能替代实现（ios-platform-features）实施计划
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
