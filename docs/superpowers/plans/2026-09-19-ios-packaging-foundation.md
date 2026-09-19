@@ -92,7 +92,7 @@ docs/openspec/changes/ios-packaging-foundation/    ← 新：expect-actual-check
 - Consumes: 无（起点任务）。
 - Produces: `shared` 模块两个编译目标 `iosArm64`、`iosSimulatorArm64`；名为 `shared` 的动态 framework（`binaries.framework { baseName = "shared" }`），供 Task 10 的 `import shared` 与 `embedAndSignAppleFrameworkForXcode` 消费；`libs.ktor.darwin` 版本目录条目，供 Task 2/6 的 iosMain 依赖。
 
-- [x] **Step 1: 在 `gradle/libs.versions.toml` 的 `[libraries]` 末尾新增条目**
+- [x] **Step 1: 在 `gradle/libs.versions.toml` 的 `[libraries]` 末尾新增条目** <!-- comet-task:2b1aefdd-eea5-4b88-830a-1de3ae22a0be -->
 
 ```toml
 ktor-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
@@ -100,7 +100,7 @@ ktor-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 
 （Ktor iOS 原生引擎，与现有 `ktor-okhttp` 同版本 ref，不引入新版本。）
 
-- [x] **Step 2: 在 `shared/build.gradle.kts` 的 `kotlin { }` 块内、`android { }` 块之后声明 iOS target 与 framework**
+- [x] **Step 2: 在 `shared/build.gradle.kts` 的 `kotlin { }` 块内、`android { }` 块之后声明 iOS target 与 framework** <!-- comet-task:2b1aefdd-eea5-4b88-830a-1de3ae22a0be -->
 
 `kotlin { }` 块内追加：
 
@@ -127,17 +127,17 @@ iosMain.dependencies {
 
 注意：`targets.withType<...>` 用完整类名即可，不必新加 import；AGP 9.4 的 `androidMultiplatformLibrary` 插件与 iOS target 共存的 DSL 若与本文有出入（design §7 风险 2），以 Kotlin 2.4.20 编译器/IDE 提示为准校正 DSL 写法，**不改设计决策**（目标集合、framework 名、动态框架不变）。
 
-- [x] **Step 3: 运行 iOS 编译 spike**
+- [x] **Step 3: 运行 iOS 编译 spike** <!-- comet-task:2b1aefdd-eea5-4b88-830a-1de3ae22a0be -->
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 --stacktrace`
 Expected: 两个任务被正确创建并开始编译（首次会下载 Kotlin/Native 工具链，耐心等待）；编译**失败但所有错误均为 expect 缺 actual 类**（`Actual is missing` / `expect declaration ... has no corresponding actual` 等）。出现任何 DSL 解析错误、插件冲突错误、工具链错误都意味着 spike 未通过——按编译器提示修正 DSL 后重试；若 AGP 9.4 共存问题无法绕过，停止并回报（design §7 风险 1）。
 
-- [x] **Step 4: 确认 Android 侧零影响**
+- [x] **Step 4: 确认 Android 侧零影响** <!-- comet-task:2b1aefdd-eea5-4b88-830a-1de3ae22a0be -->
 
 Run: `./gradlew :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS（产物与任务列表不变）。
 
-- [x] **Step 5: 提交**
+- [x] **Step 5: 提交** <!-- comet-task:2b1aefdd-eea5-4b88-830a-1de3ae22a0be -->
 
 ```bash
 ./gradlew spotlessApply
@@ -158,7 +158,7 @@ git commit -m "feat: declare iOS targets and shared framework for KMP"
 - Consumes: Task 1 的 iOS targets 与 `libs.ktor.darwin`。
 - Produces: commonMain 全部 34 个 expect 声明的可编译 actual（本任务为骨架，Task 4-7 逐个精修为最终实现）；后续任务依赖的签名与本文件逐字一致。
 
-- [x] **Step 1: 新建 17 个骨架文件**（签名照抄 commonMain expect，逐字如下）
+- [x] **Step 1: 新建 17 个骨架文件**（签名照抄 commonMain expect，逐字如下） <!-- comet-task:eee405d9-9fac-499f-8043-7559e068f280 -->
 
 `PersistentStorage.ios.kt`（临时内存实现，Task 4 换 NSUserDefaults）：
 
@@ -437,17 +437,17 @@ actual fun QrScannerPage(
 ) {}
 ```
 
-- [x] **Step 2: 运行 iOS 编译门（两架构）**
+- [x] **Step 2: 运行 iOS 编译门（两架构）** <!-- comet-task:eee405d9-9fac-499f-8043-7559e068f280 -->
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 --stacktrace`
 Expected: PASS。若个别 platform.Foundation/UIKit 绑定名与记忆不符，按编译器提示修正 import（不改签名）。
 
-- [x] **Step 3: Android 零回归门**
+- [x] **Step 3: Android 零回归门** <!-- comet-task:eee405d9-9fac-499f-8043-7559e068f280 -->
 
 Run: `./gradlew :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [x] **Step 4: 提交**
+- [x] **Step 4: 提交** <!-- comet-task:eee405d9-9fac-499f-8043-7559e068f280 -->
 
 ```bash
 ./gradlew spotlessApply
@@ -465,12 +465,12 @@ git commit -m "feat: add tiered iosMain actual skeleton for all 34 expects"
 - Consumes: Task 1/2 的全部改动。
 - Produces: Android 构建与测试零回归的结论（写入任务备注）。
 
-- [x] **Step 1: 执行完整 Android 门**
+- [x] **Step 1: 执行完整 Android 门** <!-- comet-task:aa93ea45-8fc6-47a4-a503-a01a36e623b1 -->
 
 Run: `./gradlew :androidApp:assembleDebug :shared:testDebugUnitTest :shared:spotlessCheck --stacktrace`
 Expected: 全部 PASS。若有回归，用 `git stash` / 回滚定位到引入回归的任务并修复后重跑。
 
-- [x] **Step 2: 记录结论**（无代码变更则无提交；若修了回归，单独提交修复）
+- [x] **Step 2: 记录结论**（无代码变更则无提交；若修了回归，单独提交修复） <!-- comet-task:aa93ea45-8fc6-47a4-a503-a01a36e623b1 -->
 
 ---
 
@@ -484,7 +484,7 @@ Expected: 全部 PASS。若有回归，用 `git stash` / 回滚定位到引入�
 - Consumes: commonMain `expect class PersistentStorage`（8 个方法签名见 Task 2 骨架）与 `expect fun copyTextToClipboard(text: String): Boolean`。
 - Produces: iOS 持久化读写真实落盘（NSUserDefaults standard suite，key 前缀 `ilife798.`）、剪贴板复制；Task 11 冒烟依赖「登录态重启恢复」由本任务实现支撑。
 
-- [x] **Step 1: 用以下内容替换 `PersistentStorage.ios.kt`**
+- [x] **Step 1: 用以下内容替换 `PersistentStorage.ios.kt`** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 ```kotlin
 package com.github.ilife798
@@ -546,7 +546,7 @@ actual class PersistentStorage {
 }
 ```
 
-- [x] **Step 2: 用以下内容替换 `Clipboard.ios.kt`**
+- [x] **Step 2: 用以下内容替换 `Clipboard.ios.kt`** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 ```kotlin
 package com.github.ilife798
@@ -561,21 +561,21 @@ actual fun copyTextToClipboard(text: String): Boolean =
     }.getOrDefault(false)
 ```
 
-- [x] **Step 3: 编译门**
+- [x] **Step 3: 编译门** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 Run: `./gradlew :shared:compileKotlinIosSimulatorArm64 --stacktrace`
 Expected: PASS（绑定名如有出入按编译器提示修正；不改 key 前缀与默认值语义）。
 
-- [x] **Step 4: Android 零回归门**
+- [x] **Step 4: Android 零回归门** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 Run: `./gradlew :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [x] **Step 5: 在冒烟清单登记验证项**
+- [x] **Step 5: 在冒烟清单登记验证项** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 在 Task 11 将创建的 `docs/openspec/changes/ios-packaging-foundation/simulator-smoke-checklist.md` 待验列表中登记：「登录 → 杀掉应用重启 → 登录态与设置项恢复（NSUserDefaults 持久化）」与「设置页复制任意文本 → 粘贴板可见内容一致」。（运行时验证统一在 Task 11 执行，理由见前文映射说明。）
 
-- [x] **Step 6: 提交**
+- [x] **Step 6: 提交** <!-- comet-task:ba34eeb1-912a-4b7a-a07c-23a8dbd2185f -->
 
 ```bash
 ./gradlew spotlessApply
@@ -600,7 +600,7 @@ git commit -m "feat: implement iOS PersistentStorage via NSUserDefaults and Clip
 - Consumes: Task 2 骨架签名（逐字不变）。
 - Produces: 与 Android 语义一致的时间/版本/日志/图片解码/错误分类/动态色读取；Task 11 冒烟依赖「页面时间显示正常、版本号正确、错误提示归类正确」。
 
-- [x] **Step 1: 用以下内容替换 `util/TimeUtils.ios.kt`**
+- [x] **Step 1: 用以下内容替换 `util/TimeUtils.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798.util
@@ -634,7 +634,7 @@ actual fun getTodayStart(now: Long): Long {
 }
 ```
 
-- [x] **Step 2: 用以下内容替换 `Version.ios.kt`**
+- [x] **Step 2: 用以下内容替换 `Version.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798
@@ -649,7 +649,7 @@ actual fun getAppVersionCode(): String =
     NSBundle.mainBundle.infoDictionary?.get("CFBundleVersion") as? String ?: "0"
 ```
 
-- [x] **Step 3: 用以下内容替换 `Logger.ios.kt`**
+- [x] **Step 3: 用以下内容替换 `Logger.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798
@@ -665,7 +665,7 @@ actual fun logDebug(
 }
 ```
 
-- [x] **Step 4: 用以下内容替换 `ImageConversion.ios.kt`**
+- [x] **Step 4: 用以下内容替换 `ImageConversion.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798
@@ -683,7 +683,7 @@ actual fun ByteArray.toImageBitmap(): ImageBitmap =
     }
 ```
 
-- [x] **Step 5: 用以下内容替换 `data/viewmodel/NetworkErrors.ios.kt`**
+- [x] **Step 5: 用以下内容替换 `data/viewmodel/NetworkErrors.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798.data.viewmodel
@@ -733,7 +733,7 @@ private fun NSError.isTransientUrlError(): Boolean {
 }
 ```
 
-- [x] **Step 6: 用以下内容替换 `ui/theme/DynamicColorKey.ios.kt`**
+- [x] **Step 6: 用以下内容替换 `ui/theme/DynamicColorKey.ios.kt`** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```kotlin
 package com.github.ilife798.ui.theme
@@ -788,16 +788,16 @@ private typealias CGColorCopyAlphaAlias = CGColorCopyAlpha
 
 注意：上例末尾的 `iosColorRef`/`typealias` 两行**仅为占位说明，实际提交时必须删除**——它们的目的是提醒执行者：`CGFloatVar`/`getRed` 的确切绑定名（`platform.UIKit` 与 `kotlinx.cinterop` 之间）以编译器提示为准修正，若绑定摩擦过大，允许将实现退化为恒 `return null`（设计明确允许的回退路径），并把该决定记录进 Task 11 冒烟结论。最终提交文件中**不得残留**这两行。
 
-- [x] **Step 7: 编译门 + Android 门**
+- [x] **Step 7: 编译门 + Android 门** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 Run: `./gradlew :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: 全部 PASS。
 
-- [x] **Step 8: 在冒烟清单登记验证项**
+- [x] **Step 8: 在冒烟清单登记验证项** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 向 Task 11 的冒烟清单登记：「任务/账单页时间文案与 Android 显示一致；设置/关于页版本号显示 1.2.3；断网触发接口错误时提示分类与 Android 一致；图片（若有远程图）展示正常或占位不崩」。
 
-- [x] **Step 9: 提交**
+- [x] **Step 9: 提交** <!-- comet-task:535f9eae-29a1-4210-9260-133149a361ef -->
 
 ```bash
 ./gradlew spotlessApply
@@ -817,7 +817,7 @@ git commit -m "feat: implement iOS base utilities (time/version/log/image/networ
 - Consumes: Task 1 的 `libs.ktor.darwin`；commonMain `ApiConfig.USER_AGENT`/`VERSION_CODE`。
 - Produces: 与 Android OkHttp 实现同语义的业务 HTTP 客户端（JSON 配置 + 默认请求头）与更新检查客户端（60s 请求超时）；Task 11 冒烟依赖「模拟器登录请求可达后端」。
 
-- [x] **Step 1: 用以下内容替换 `data/api/HttpClientProvider.ios.kt`**
+- [x] **Step 1: 用以下内容替换 `data/api/HttpClientProvider.ios.kt`** <!-- comet-task:80f05ba9-74e6-4c29-9860-774f638ef926 -->
 
 ```kotlin
 package com.github.ilife798.data.api
@@ -852,7 +852,7 @@ actual fun createHttpClient(): HttpClient =
     }
 ```
 
-- [x] **Step 2: 在 `update/AppUpdatePlatform.ios.kt` 中将 `createUpdateHttpClient` 替换为**
+- [x] **Step 2: 在 `update/AppUpdatePlatform.ios.kt` 中将 `createUpdateHttpClient` 替换为** <!-- comet-task:80f05ba9-74e6-4c29-9860-774f638ef926 -->
 
 ```kotlin
 actual fun createUpdateHttpClient(): HttpClient =
@@ -867,16 +867,16 @@ actual fun createUpdateHttpClient(): HttpClient =
 
 （同时在文件顶部补 import：`io.ktor.client.plugins.HttpTimeout`。）
 
-- [x] **Step 3: 编译门 + Android 门**
+- [x] **Step 3: 编译门 + Android 门** <!-- comet-task:80f05ba9-74e6-4c29-9860-774f638ef926 -->
 
 Run: `./gradlew :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [x] **Step 4: 在冒烟清单登记验证项**
+- [x] **Step 4: 在冒烟清单登记验证项** <!-- comet-task:80f05ba9-74e6-4c29-9860-774f638ef926 -->
 
 向 Task 11 的冒烟清单登记：「填入有效账号登录 → 登录成功（Darwin 引擎请求可达后端）；断网登录 → 呈现网络错误文案而非崩溃」。
 
-- [x] **Step 5: 提交**
+- [x] **Step 5: 提交** <!-- comet-task:80f05ba9-74e6-4c29-9860-774f638ef926 -->
 
 ```bash
 ./gradlew spotlessApply
@@ -897,7 +897,7 @@ git commit -m "feat: implement iOS HTTP clients with Ktor Darwin engine"
 - Consumes: commonMain `SPONSOR_URL`（`com.github.ilife798.util`，值 `https://afdian.com/a/jursin`）、miuix 组件（`top.yukonga.miuix.kmp.basic.Text/Button`、`MiuixTheme`）。
 - Produces: 扫码占位页（明确提示 + 返回按钮，导航不悬空）、Sponsor 真实现；Task 11 冒烟的 stub 入口断言全部由本任务后的代码状态支撑。
 
-- [x] **Step 1: 用以下内容替换 `ui/page/device/QrScannerPage.ios.kt`**
+- [x] **Step 1: 用以下内容替换 `ui/page/device/QrScannerPage.ios.kt`** <!-- comet-task:f3e4bfc4-86d4-48af-96af-47449d3f53be -->
 
 ```kotlin
 package com.github.ilife798.ui.page.device
@@ -961,7 +961,7 @@ actual fun QrScannerPage(
 
 （若 `MiuixTheme.colorScheme.primary`/`textStyles.body2` 字段名与实际不符，按 IDE 提示改用 `MiuixTheme` 中等价字段；不引入新依赖。）
 
-- [x] **Step 2: 用以下内容替换 `util/Sponsor.ios.kt`**
+- [x] **Step 2: 用以下内容替换 `util/Sponsor.ios.kt`** <!-- comet-task:f3e4bfc4-86d4-48af-96af-47449d3f53be -->
 
 ```kotlin
 package com.github.ilife798.util
@@ -976,16 +976,16 @@ actual fun openSponsorPage(): Boolean {
 }
 ```
 
-- [x] **Step 3: 编译门 + Android 门**
+- [x] **Step 3: 编译门 + Android 门** <!-- comet-task:f3e4bfc4-86d4-48af-96af-47449d3f53be -->
 
 Run: `./gradlew :shared:compileKotlinIosSimulatorArm64 :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS。
 
-- [x] **Step 4: 在冒烟清单登记验证项**
+- [x] **Step 4: 在冒烟清单登记验证项** <!-- comet-task:f3e4bfc4-86d4-48af-96af-47449d3f53be -->
 
 登记：「扫码入口 → 占位页出现 + 点返回可回退；支付入口 → 弹出『iOS 端暂不支持应用内支付』；更新入口 → 无崩溃（安装/下载类操作空转）；电池优化设置入口 → 无跳转无崩溃；赞助入口 → Safari 打开 afdian 链接；Toast 场景静默不崩」。
 
-- [x] **Step 5: 提交**
+- [x] **Step 5: 提交** <!-- comet-task:f3e4bfc4-86d4-48af-96af-47449d3f53be -->
 
 ```bash
 ./gradlew spotlessApply
@@ -1004,7 +1004,7 @@ git commit -m "feat: add iOS qr-scanner placeholder page and sponsor link opener
 - Consumes: Task 1-7 的 iosMain 全部文件；commonMain 17 个含 expect 的文件。
 - Produces: 覆盖核对清单文档（17 文件 / 34 声明全表）；后续 PR review 依据。
 
-- [x] **Step 1: 用编译器做权威核对**
+- [x] **Step 1: 用编译器做权威核对** <!-- comet-task:5d4a473e-01fc-46a6-a8b1-22ae843d4a77 -->
 
 Run: `./gradlew :shared:compileKotlinIosArm64 :shared:compileKotlinIosSimulatorArm64 --stacktrace`
 Expected: PASS（iOS 编译通过 = 每个 expect 均有 actual，这是权威判定）。
@@ -1012,7 +1012,7 @@ Expected: PASS（iOS 编译通过 = 每个 expect 均有 actual，这是权威�
 Run: `grep -rn "expect " shared/src/commonMain --include="*.kt" | wc -l && grep -rln "actual" shared/src/iosMain --include="*.kt" | wc -l`
 Expected: `34` 与 `17`。
 
-- [x] **Step 2: 写入核对清单 `expect-actual-checklist.md`**（内容照抄下表）
+- [x] **Step 2: 写入核对清单 `expect-actual-checklist.md`**（内容照抄下表） <!-- comet-task:5d4a473e-01fc-46a6-a8b1-22ae843d4a77 -->
 
 ```markdown
 # expect/actual 覆盖核对清单（ios-packaging-foundation）
@@ -1042,7 +1042,7 @@ Expected: `34` 与 `17`。
 合计：17 文件 / 34 声明。Change 2（ios-platform-features）待替换项：#8 stub 部分、#13-#17。
 ```
 
-- [x] **Step 3: 提交**
+- [x] **Step 3: 提交** <!-- comet-task:5d4a473e-01fc-46a6-a8b1-22ae843d4a77 -->
 
 ```bash
 git add docs/openspec/changes/ios-packaging-foundation/expect-actual-checklist.md
@@ -1061,7 +1061,7 @@ git commit -m "docs: record expect/actual coverage checklist for iosMain"
 - Consumes: 根目录 `secrets.properties`（可选存在）与 `ILIFE798_*` 环境变量。
 - Produces: Gradle 任务 `generateIosBuildConfig`；生成 `shared/build/generated/iosBuildConfig/kotlin/com/github/ilife798/buildConfig/IosBuildConfig.kt`，其中 `object IosBuildConfig { const val API_GATEWAY: String; const val SIGN_SALT: String; const val API_CID: String }`，仅注册进 iosMain sourceSet——Task 10 的 `MainViewController.kt` 依赖该 object 的这三个常量名。
 
-- [x] **Step 1: 在 `shared/build.gradle.kts` 文件头部（plugins 之前）添加 import，并在 `kotlin { }` 块之前添加生成任务**
+- [x] **Step 1: 在 `shared/build.gradle.kts` 文件头部（plugins 之前）添加 import，并在 `kotlin { }` 块之前添加生成任务** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 文件头新增：
 
@@ -1128,7 +1128,7 @@ val generateIosBuildConfig =
     }
 ```
 
-- [x] **Step 2: 将生成目录注册进 iosMain sourceSet，并挂接 iOS 编译任务依赖**
+- [x] **Step 2: 将生成目录注册进 iosMain sourceSet，并挂接 iOS 编译任务依赖** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 `kotlin { sourceSets { } }` 块内追加：
 
@@ -1149,7 +1149,7 @@ tasks
     }
 ```
 
-- [x] **Step 3: 验证注入矩阵（三种来源场景）**
+- [x] **Step 3: 验证注入矩阵（三种来源场景）** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 Run（场景 A，有 secrets.properties）:
 ```bash
@@ -1173,7 +1173,7 @@ rm secrets.properties && unset ILIFE798_API_GATEWAY ILIFE798_SIGN_SALT ILIFE798_
 ```
 Expected: 构建成功，生成文件三个常量均为 `""`（与 Android 缺省行为一致）。
 
-- [x] **Step 4: 特殊字符转义往返验证（Review Focus #1 的钉子）**
+- [x] **Step 4: 特殊字符转义往返验证（Review Focus #1 的钉子）** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 Run:
 ```bash
@@ -1182,7 +1182,7 @@ printf 'API_GATEWAY=https://a$b"c\\d\n' > secrets.properties
 ```
 Expected: 编译 PASS（生成代码中该值以 `\$`、`\"`、`\\` 形式安全转义）。验证后还原 `rm secrets.properties`。
 
-- [x] **Step 5: 确认生成目录不入库 + Android 门**
+- [x] **Step 5: 确认生成目录不入库 + Android 门** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 Run: `git check-ignore -v shared/build/generated/iosBuildConfig/kotlin/com/github/ilife798/buildConfig/IosBuildConfig.kt`
 Expected: 命中根 `.gitignore` 的 `build/` 规则（design §3 的「加入 .gitignore」已由既有规则满足，无需改 .gitignore）。
@@ -1190,7 +1190,7 @@ Expected: 命中根 `.gitignore` 的 `build/` 规则（design §3 的「加入 .
 Run: `./gradlew :androidApp:assembleDebug :shared:testDebugUnitTest --stacktrace`
 Expected: PASS（注入只影响 iosMain）。
 
-- [x] **Step 6: 提交**
+- [x] **Step 6: 提交** <!-- comet-task:450c0e8c-470d-49c3-b720-72d57f527ca2 -->
 
 ```bash
 ./gradlew spotlessApply
@@ -1216,7 +1216,7 @@ git commit -m "feat: generate IosBuildConfig constants from secrets.properties o
 - Consumes: Task 1 的 framework `shared` 与 `embedAndSignAppleFrameworkForXcode` 任务；Task 9 的 `IosBuildConfig.API_GATEWAY/SIGN_SALT/API_CID`；commonMain `App()`、`AppLifecycle.notifyResumed()/notifyStopped()`。
 - Produces: 可被 xcodebuild 构建的 iOS 应用工程（scheme `iosApp`，bundle id `com.github.ilife798.iosApp`，部署目标 15.0，无签名构建）；Task 12 打包脚本与 Task 14 CI 依赖该工程的路径与 scheme 名。
 
-- [x] **Step 1: 新建 `shared/src/iosMain/kotlin/com/github/ilife798/MainViewController.kt`**（对齐 MainActivity.onCreate 初始化序列，design §2.3）
+- [x] **Step 1: 新建 `shared/src/iosMain/kotlin/com/github/ilife798/MainViewController.kt`**（对齐 MainActivity.onCreate 初始化序列，design §2.3） <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```kotlin
 package com.github.ilife798
@@ -1239,7 +1239,7 @@ fun MainViewController(): UIViewController {
 
 （`DeviceTile.controller` 不设置——commonMain 注释已定义「未设置 = 不支持」语义。）
 
-- [x] **Step 2: 新建 `iosApp/Configuration/Config.xcconfig`**
+- [x] **Step 2: 新建 `iosApp/Configuration/Config.xcconfig`** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```
 // iOS 应用构建配置。签名团队留空：本 change 产出未签名构建；用户自行签名时在此填写 DEVELOPMENT_TEAM。
@@ -1251,7 +1251,7 @@ CURRENT_PROJECT_VERSION = 6
 DEVELOPMENT_TEAM =
 ```
 
-- [x] **Step 3: 新建 `iosApp/iosApp/iOSApp.swift`**
+- [x] **Step 3: 新建 `iosApp/iosApp/iOSApp.swift`** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```swift
 import SwiftUI
@@ -1280,7 +1280,7 @@ struct iOSApp: App {
 }
 ```
 
-- [x] **Step 4: 新建 `iosApp/iosApp/ContentView.swift`**
+- [x] **Step 4: 新建 `iosApp/iosApp/ContentView.swift`** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```swift
 import SwiftUI
@@ -1302,7 +1302,7 @@ struct ComposeView: UIViewControllerRepresentable {
 }
 ```
 
-- [x] **Step 5: 新建 `iosApp/iosApp/Info.plist`**（基础声明；相机权限归 Change 2，不在此添加）
+- [x] **Step 5: 新建 `iosApp/iosApp/Info.plist`**（基础声明；相机权限归 Change 2，不在此添加） <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -1341,7 +1341,7 @@ struct ComposeView: UIViewControllerRepresentable {
 </plist>
 ```
 
-- [x] **Step 6: 新建 Asset Catalog 占位**
+- [x] **Step 6: 新建 Asset Catalog 占位** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 `iosApp/iosApp/Assets.xcassets/Contents.json`：
 
@@ -1374,7 +1374,7 @@ struct ComposeView: UIViewControllerRepresentable {
 
 （空 iconset 构建仅有警告，允许；正式图标后续补。）
 
-- [x] **Step 7: 新建 `iosApp/iosApp.xcodeproj/project.pbxproj`**（objectVersion 77 / 文件系统同步组布局，与 Xcode 16 官方模板一致）
+- [x] **Step 7: 新建 `iosApp/iosApp.xcodeproj/project.pbxproj`**（objectVersion 77 / 文件系统同步组布局，与 Xcode 16 官方模板一致） <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```
 // !$*UTF8*$!
@@ -1681,7 +1681,7 @@ struct ComposeView: UIViewControllerRepresentable {
 
 排错提示（按需逐个排查，不改设计决策）：① Swift 报 `No such module 'shared'`——确认 Run Script 阶段先于 Sources 执行且 Gradle 输出无错误；必要时在 FRAMEWORK_SEARCH_PATHS 增补 `$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)` 或 Gradle framework 产物的实际目录。② `java not found`——脚本内 `/usr/libexec/java_home` 兜底已处理；CI 由 setup-java 提供 JAVA_HOME。③ pbxproj 语法问题——`plutil -lint` 与 `xcodebuild -list` 会立刻暴露。
 
-- [x] **Step 8: 工程可解析 + 无签名模拟器构建**
+- [x] **Step 8: 工程可解析 + 无签名模拟器构建** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 Run:
 ```bash
@@ -1695,7 +1695,7 @@ xcodebuild -project iosApp/iosApp.xcodeproj -scheme iosApp -configuration Debug 
 
 Expected: Info.plist 校验通过；scheme 列表含 `iosApp`；模拟器构建 PASS（其中 Run Script 会先执行 `:shared:embedAndSignAppleFrameworkForXcode` 编译 Kotlin framework）。
 
-- [x] **Step 9: 提交**
+- [x] **Step 9: 提交** <!-- comet-task:686d03b1-908f-4e84-a071-0b6cef6537cb -->
 
 ```bash
 git add shared/src/iosMain/kotlin/com/github/ilife798/MainViewController.kt iosApp
@@ -1713,7 +1713,7 @@ git commit -m "feat: add iosApp Xcode shell hosting shared Compose UI with confi
 - Consumes: Task 10 构建出的 `.app`；Task 4/5/6/7 登记的验证项。
 - Produces: 冒烟结论记录（change 目录内，PR 依据之一）。
 
-- [x] **Step 1: 构建并安装到模拟器**
+- [x] **Step 1: 构建并安装到模拟器** <!-- comet-task:f862ac93-17c4-4d1a-90b2-ba7b7b84e45c -->
 
 Run:
 ```bash
@@ -1723,7 +1723,7 @@ xcrun simctl launch booted com.github.ilife798.iosApp
 ```
 Expected: launch 命令退出码 0，模拟器中出现共享界面。
 
-- [x] **Step 2: 执行冒烟清单并记录**（每项标 通过/失败/受阻 + 结论；允许附截图路径）
+- [x] **Step 2: 执行冒烟清单并记录**（每项标 通过/失败/受阻 + 结论；允许附截图路径） <!-- comet-task:f862ac93-17c4-4d1a-90b2-ba7b7b84e45c -->
 
 清单（来自 design §6.2 与 Task 4/5/6/7 的登记项）：
 1. 启动无崩溃，显示共享界面。
@@ -1740,7 +1740,7 @@ Expected: launch 命令退出码 0，模拟器中出现共享界面。
 
 全部通过方可进入 Task 12；miuix 渲染异常按 design §7 风险 3 处理（记录到 Change 2，不阻塞本 change 除非崩溃级）。
 
-- [x] **Step 3: 提交**
+- [x] **Step 3: 提交** <!-- comet-task:f862ac93-17c4-4d1a-90b2-ba7b7b84e45c -->
 
 ```bash
 git add docs/openspec/changes/ios-packaging-foundation/simulator-smoke-checklist.md
@@ -1758,7 +1758,7 @@ git commit -m "docs: record iOS simulator smoke test results"
 - Consumes: Task 10 的 `iosApp/iosApp.xcodeproj`（scheme `iosApp`）；androidApp `versionName`。
 - Produces: `iosApp/build/dist/ILife798-v$VERSION-unsigned-ios.ipa`；脚本可被 Task 14/15 的 CI 直接调用（无参数；`IPA_VERSION` 环境变量可覆盖版本）。
 
-- [x] **Step 1: 编写脚本**
+- [x] **Step 1: 编写脚本** <!-- comet-task:d40472ed-fb67-4e7b-8417-0d16ea81a7c0 -->
 
 ```bash
 #!/usr/bin/env bash
@@ -1812,12 +1812,12 @@ echo "已生成: $IPA_PATH"
 
 Run: `chmod +x iosApp/scripts/build-unsigned-ipa.sh`
 
-- [x] **Step 2: 本地打包**
+- [x] **Step 2: 本地打包** <!-- comet-task:d40472ed-fb67-4e7b-8417-0d16ea81a7c0 -->
 
 Run: `./iosApp/scripts/build-unsigned-ipa.sh`
 Expected: 退出码 0，输出 `iosApp/build/dist/ILife798-v1.2.3-unsigned-ios.ipa`。
 
-- [x] **Step 3: 无签名环境验证（Review Focus #3 的钉子）**
+- [x] **Step 3: 无签名环境验证（Review Focus #3 的钉子）** <!-- comet-task:d40472ed-fb67-4e7b-8417-0d16ea81a7c0 -->
 
 Run:
 ```bash
@@ -1826,7 +1826,7 @@ security find-identity -v -p codesigning | grep -c "iPhone Developer\|Apple Deve
 ```
 Expected: 即使本机无任何签名身份（计数为 0），打包仍然成功退出 0——归档命令显式 `CODE_SIGN_IDENTITY=""` 保证这一点。产物可被签名工具接受：`unzip -l` 断言 `Payload/iosApp.app/Info.plist` 与主二进制 `Payload/iosApp.app/iosApp` 存在（脚本内已断言），`unzip -t` 完整性通过。
 
-- [x] **Step 4: 提交**
+- [x] **Step 4: 提交** <!-- comet-task:d40472ed-fb67-4e7b-8417-0d16ea81a7c0 -->
 
 ```bash
 git add iosApp/scripts/build-unsigned-ipa.sh
@@ -1844,7 +1844,7 @@ git commit -m "feat: add unsigned IPA packaging script via xcodebuild archive"
 - Consumes: Task 12 脚本的路径与行为。
 - Produces: 面向用户的本地构建 + 自签安装指引（design §7 风险 6：避免未签名 IPA 被误认为损坏）。
 
-- [x] **Step 1: 在 `README.md` 追加以下小节（Markdown，二级标题位置按现有文档层级并入）**
+- [x] **Step 1: 在 `README.md` 追加以下小节（Markdown，二级标题位置按现有文档层级并入）** <!-- comet-task:6a5674cb-3d96-4df3-80a7-d09f4ef77f5b -->
 
 ````markdown
 ## iOS 构建（未签名）
@@ -1883,7 +1883,7 @@ cd /tmp/ios-sign && zip -qry ../ILife798-signed.ipa Payload
 签名后的 IPA 通过 Xcode（Devices & Simulators）或 Apple Configurator 安装到设备。
 ````
 
-- [x] **Step 2: 提交**
+- [x] **Step 2: 提交** <!-- comet-task:6a5674cb-3d96-4df3-80a7-d09f4ef77f5b -->
 
 ```bash
 git add README.md
@@ -1901,7 +1901,7 @@ git commit -m "docs: add iOS build and self-signing installation guide"
 - Consumes: Task 12 的打包脚本；仓库 secrets `API_GATEWAY`/`SIGN_SALT`/`API_CID`（与 android.yml 同源）。
 - Produces: iOS 验证工作流（PR/push(main) + workflow_dispatch，macos-latest，JDK 21 + Gradle 缓存 + secrets 注入 + 双架构编译 + 打包 + IPA artifact）。Task 15 在同文件追加 release job。
 
-- [x] **Step 1: 创建 `.github/workflows/ios.yml`（先只含 validate job）**
+- [x] **Step 1: 创建 `.github/workflows/ios.yml`（先只含 validate job）** <!-- comet-task:79fd51a7-7e07-4c1e-b309-c67cc99a467f -->
 
 ```yaml
 name: iOS CI and Release
@@ -1983,7 +1983,7 @@ jobs:
 
 说明：macOS runner 需显式安装 Android SDK（shared 模块含 Android target，Gradle 配置阶段即需要；镜像 android.yml 步骤）。CI 只做编译 + 打包，不跑测试、不做模拟器冒烟（全局约束）。
 
-- [x] **Step 2: push 分支并在 PR 上验证 CI**
+- [x] **Step 2: push 分支并在 PR 上验证 CI** <!-- comet-task:79fd51a7-7e07-4c1e-b309-c67cc99a467f -->
 
 Run:
 ```bash
@@ -1992,7 +1992,7 @@ gh run watch $(gh run list --workflow=ios.yml --limit 1 --json databaseId -q '.[
 ```
 Expected: validate job 绿色；运行页面可下载 `ilife798-unsigned-ios-ipa` 产物，`unzip -l` 该产物结构正确（Review Focus：无证书 CI runner 等价于本机无签名环境）。若 Xcode 大版本漂移导致失败，按 design §7 钉 `setup-xcode`（届时再引入）。
 
-- [x] **Step 3: 提交（随分支推送生效）**
+- [x] **Step 3: 提交（随分支推送生效）** <!-- comet-task:79fd51a7-7e07-4c1e-b309-c67cc99a467f -->
 
 ```bash
 git add .github/workflows/ios.yml
@@ -2010,7 +2010,7 @@ git commit -m "ci: add iOS validate workflow on macOS runner"
 - Consumes: Task 12 脚本；android.yml 的版本一致性写法与 `view || create` 发布写法。
 - Produces: tag `v*` 触发的自动发布：版本一致性校验 → 构建 IPA → 幂等发布到 GitHub Release。
 
-- [x] **Step 1: 在 `.github/workflows/ios.yml` 的 `jobs:` 下追加 release job**
+- [x] **Step 1: 在 `.github/workflows/ios.yml` 的 `jobs:` 下追加 release job** <!-- comet-task:a2808944-fb3c-4ce1-ac89-eb8f8532bd25 -->
 
 ```yaml
   release:
@@ -2083,7 +2083,7 @@ git commit -m "ci: add iOS validate workflow on macOS runner"
 
 （release 的 `view || create` + create 失败回退 `upload --clobber` 兜底 android/ios 双工作流在同一个 tag 上并发创建 Release 的竞争——Review Focus #5 的钉子。）
 
-- [x] **Step 2: 端到端验证一次 tag 触发**
+- [x] **Step 2: 端到端验证一次 tag 触发** <!-- comet-task:a2808944-fb3c-4ce1-ac89-eb8f8532bd25 -->
 
 Run:
 ```bash
@@ -2092,7 +2092,7 @@ git tag -l v1.2.3   # 先确认 tag 是否已存在
 - 若不存在：`git tag v1.2.3 && git push origin v1.2.3`，`gh run watch` 至 release job 结束。Expected: Release `v1.2.3` 出现且资产含 `ILife798-v1.2.3-unsigned-ios.ipa`。验证后清理测试产物：`gh release delete v1.2.3 --yes && git push origin :refs/tags/v1.2.3`（若 tag 同时被 android.yml 使用则保留，二选一说明于任务备注）。
 - 若已存在（上游已发布）：改为验证「已存在 Release 时 upload --clobber 增补」路径——`gh release view v1.2.3` 确认后重推同名 tag（`git push origin v1.2.3 --force` 需维护者同意）或延后到下一次真实版本发布时验证，并在任务备注记录偏差。
 
-- [x] **Step 3: 提交**
+- [x] **Step 3: 提交** <!-- comet-task:a2808944-fb3c-4ce1-ac89-eb8f8532bd25 -->
 
 ```bash
 git add .github/workflows/ios.yml
@@ -2109,12 +2109,12 @@ git commit -m "ci: publish unsigned iOS IPA to GitHub Release on version tags"
 - Consumes: 全部前序任务；base-ref `af15849e271391da91d578d3fe6090ccff5fcada`。
 - Produces: Android CI 门 + iOS 构建门全绿的最终结论；PR 关键修改文件清单核对记录。
 
-- [x] **Step 1: Android CI 全量门（与 android.yml validate 相同任务集）**
+- [x] **Step 1: Android CI 全量门（与 android.yml validate 相同任务集）** <!-- comet-task:ab66c304-ea4c-418c-b99d-3d07a166f9f5 -->
 
 Run: `./gradlew spotlessCheck testDebugUnitTest testAndroidHostTest lintDebug --no-daemon --stacktrace`
 Expected: 全部 PASS。
 
-- [x] **Step 2: iOS 构建门**
+- [x] **Step 2: iOS 构建门** <!-- comet-task:ab66c304-ea4c-418c-b99d-3d07a166f9f5 -->
 
 Run:
 ```bash
@@ -2123,7 +2123,7 @@ Run:
 ```
 Expected: 全部 PASS（打包断言内建于脚本）。
 
-- [x] **Step 3: PR 文件边界核对（与 Comet 工作流文件完全分离）**
+- [x] **Step 3: PR 文件边界核对（与 Comet 工作流文件完全分离）** <!-- comet-task:ab66c304-ea4c-418c-b99d-3d07a166f9f5 -->
 
 Run:
 ```bash
@@ -2132,7 +2132,7 @@ git diff --name-only af15849e271391da91d578d3fe6090ccff5fcada...HEAD | grep -c "
 ```
 Expected: 文件清单仅落在 `shared/src/iosMain/**`、`shared/build.gradle.kts`、`gradle/libs.versions.toml`、`iosApp/**`、`.github/workflows/ios.yml`、`README.md`、`docs/`（计划/设计/change 文档）；`.comet/` 计数为 0；`.github/workflows/android.yml` 与 androidApp 构建配置不在清单中。把核对结论记录进任务备注/PR 描述。
 
-- [x] **Step 4: 无代码变更则无提交；若核对发现问题，回对应任务修复后重跑 Step 1-3**
+- [x] **Step 4: 无代码变更则无提交；若核对发现问题，回对应任务修复后重跑 Step 1-3** <!-- comet-task:ab66c304-ea4c-418c-b99d-3d07a166f9f5 -->
 
 ---
 
